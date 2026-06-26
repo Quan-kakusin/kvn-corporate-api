@@ -1,8 +1,5 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+echo "cheking code style with pint..."
 
-echo "checking format code..."
+docker exec kakusin-api ./vendor/bin/pint
 
-./vendor/bin/pint
-
-echo "done!"
+echo "Code style checked!"

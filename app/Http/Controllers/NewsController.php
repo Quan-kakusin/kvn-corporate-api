@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Wordpress\WpPost;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use OpenApi\Attributes as OA;
 
 class NewsController extends Controller
 {
     #[OA\Get(
         path: "/api/news",
-        summary: "Lấy danh sách tin tức (News)",
+        summary: "News",
         tags: ["News"]
     )]
     #[OA\Parameter(
@@ -64,28 +65,37 @@ class NewsController extends Controller
 
     public function index(Request $request)
     {
-
         $locale = $request->query('locale', 'vi');
         $isFeatured = $request->query('featured');
         $categorySlug = $request->query('category');
+        $perPage = $request->query('limit', 5);
+
+        $categoryCounts = DB::table('wp_term_relationships')
+            ->join('wp_term_taxonomy', 'wp_term_relationships.term_taxonomy_id', '=', 'wp_term_taxonomy.term_taxonomy_id')
+            ->join('wp_terms', 'wp_term_taxonomy.term_id', '=', 'wp_terms.term_id')
+            ->join('wp_posts', 'wp_term_relationships.object_id', '=', 'wp_posts.ID')
+            ->where('wp_posts.post_type', 'news')
+            ->where('wp_posts.post_status', 'publish')
+            ->select('wp_terms.slug', DB::raw('count(*) as total'))
+            ->groupBy('wp_terms.slug')
+            ->pluck('total', 'slug');
 
         $query = WpPost::query()
             ->where('post_type', 'news')
             ->where('post_status', 'publish')
             ->with([
                 'meta',
+                'terms',
                 'translations' => function ($q) use ($locale) {
                     $q->where('locale', $locale);
                 }
             ]);
-
 
         if ($isFeatured) {
             $query->whereHas('meta', function ($q) {
                 $q->where('meta_key', 'is_featured')->where('meta_value', 1);
             });
         }
-
 
         if ($categorySlug) {
             $query->whereHas('terms', function ($q) use ($categorySlug) {
@@ -94,11 +104,11 @@ class NewsController extends Controller
         }
 
 
-        $news = $query->orderBy('post_date', 'desc')->get();
+        $news = $query->orderBy('post_date', 'desc')->paginate($perPage);
+
 
         $formattedNews = $news->map(function ($item) {
             $meta = $item->meta->pluck('meta_value', 'meta_key');
-
             $translation = $item->translations->first();
             $title = $translation ? $translation->post_title : $item->post_title;
 
@@ -109,6 +119,9 @@ class NewsController extends Controller
                 $finalImage = $imagePost ? $imagePost->guid : '';
             }
 
+
+            $category = $item->terms->first();
+
             return [
                 'id'          => $item->ID,
                 'title'       => $title,
@@ -118,12 +131,25 @@ class NewsController extends Controller
                 'is_featured' => (bool)($meta['is_featured'] ?? false),
                 'slug'        => urldecode($item->post_name),
                 'created_at'  => Carbon::parse($item->post_date)->format('Y.m.d'),
+                'category'    => $category ? [
+                    'id'   => $category->term_id,
+                    'name' => $category->name,
+                    'slug' => urldecode($category->slug),
+                ] : null,
             ];
         });
 
+
         return response()->json([
             'status' => 'success',
-            'data'   => $formattedNews
+            'data'   => $formattedNews,
+            'category_counts' => $categoryCounts,
+            'meta'   => [
+                'current_page' => $news->currentPage(),
+                'last_page'    => $news->lastPage(),
+                'per_page'     => $news->perPage(),
+                'total'        => $news->total(),
+            ]
         ]);
     }
 }
