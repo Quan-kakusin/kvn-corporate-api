@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "checking format code..."
+
+./vendor/bin/pint
+
+echo "done!"

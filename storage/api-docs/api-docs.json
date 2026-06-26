@@ -1,0 +1,383 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Kakusin API",
+        "description": "Tài liệu API Kakusin",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Local API Server"
+        }
+    ],
+    "paths": {
+        "/api/banners": {
+            "get": {
+                "tags": [
+                    "Banners"
+                ],
+                "summary": "Lấy danh sách Banners",
+                "operationId": "25be441ec44a17512296339ef48da34c",
+                "parameters": [
+                    {
+                        "name": "locale",
+                        "in": "header",
+                        "description": "Mã ngôn ngữ (vi, ja, en). Mặc định là 'vi'",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "vi"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lấy dữ liệu thành công"
+                    },
+                    "500": {
+                        "description": "Lỗi server"
+                    }
+                }
+            }
+        },
+        "/api/news": {
+            "get": {
+                "tags": [
+                    "News"
+                ],
+                "summary": "Lấy danh sách tin tức (News)",
+                "operationId": "9bfe744cf19dcb58e9ab9677c29ee6c7",
+                "parameters": [
+                    {
+                        "name": "locale",
+                        "in": "query",
+                        "description": "Mã ngôn ngữ (vi, ja, en). Mặc định là 'vi'",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "vi"
+                        }
+                    },
+                    {
+                        "name": "featured",
+                        "in": "query",
+                        "description": "Lọc theo bài viết nổi bật (truyền true để lọc)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Lọc theo danh mục (slug: press-release, event, insight)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lấy dữ liệu thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 21
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "ソフトウェアエンジニアのためのClean Architecture入門"
+                                                    },
+                                                    "subtitle": {
+                                                        "type": "string",
+                                                        "example": "MASTERING PROFESSIONAL DEVELOPMENT"
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "http://localhost:8080/wp-content/uploads/2026/06/1-1.jpg"
+                                                    },
+                                                    "link": {
+                                                        "type": "string",
+                                                        "example": "https://dev-blog.example.com/clean-architecture"
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "slug": {
+                                                        "type": "string",
+                                                        "example": "ソフトウェアエンジニアのためのclean-architecture入門"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "2026.06.26"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Lỗi server"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Contact": {
+                "title": "Contact",
+                "description": "Thông tin liên hệ từ khách hàng",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Trần Anh Quân"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "quan@example.com"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "0901234567"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Tôi cần tư vấn..."
+                    },
+                    "is_read": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Product": {
+                "title": "Product",
+                "description": "Cấu trúc gốc của Sản phẩm",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://example.com/product.jpg"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "ProductTranslation": {
+                "title": "ProductTranslation",
+                "description": "Dữ liệu đa ngôn ngữ của Sản phẩm",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "product_id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "locale": {
+                        "type": "string",
+                        "example": "vi"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Tên sản phẩm việt hóa"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Mô tả chi tiết..."
+                    }
+                },
+                "type": "object"
+            },
+            "Service": {
+                "title": "Service",
+                "description": "Cấu trúc gốc của Dịch vụ",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "icon_url": {
+                        "type": "string",
+                        "example": "fa-solid fa-gear"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "ServiceTranslation": {
+                "title": "ServiceTranslation",
+                "description": "Dữ liệu đa ngôn ngữ của Dịch vụ",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "service_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "locale": {
+                        "type": "string",
+                        "example": "en"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Web Development"
+                    },
+                    "short_description": {
+                        "type": "string",
+                        "example": "Mô tả ngắn gọn..."
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "Nội dung bài viết chi tiết..."
+                    }
+                },
+                "type": "object"
+            },
+            "WpPost": {
+                "title": "WpPost",
+                "description": "Model tương tác với bảng wp_posts của WordPress",
+                "properties": {
+                    "ID": {
+                        "type": "integer",
+                        "example": 9
+                    },
+                    "post_author": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "post_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "post_title": {
+                        "type": "string",
+                        "example": "Tiêu đề bài viết WP"
+                    },
+                    "post_content": {
+                        "type": "string",
+                        "example": "Nội dung bài viết..."
+                    },
+                    "post_status": {
+                        "type": "string",
+                        "example": "publish"
+                    },
+                    "post_type": {
+                        "type": "string",
+                        "example": "home_banner"
+                    }
+                },
+                "type": "object"
+            },
+            "WpPostMeta": {
+                "title": "WpPostMeta",
+                "description": "Model lưu dữ liệu ACF và Meta của WordPress",
+                "properties": {
+                    "meta_id": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "post_id": {
+                        "type": "integer",
+                        "example": 9
+                    },
+                    "meta_key": {
+                        "type": "string",
+                        "example": "banner_subtitle"
+                    },
+                    "meta_value": {
+                        "type": "string",
+                        "example": "INNOVATION THROUGH DIGITAL"
+                    }
+                },
+                "type": "object"
+            },
+            "WpPostTranslation": {
+                "title": "WpPostTranslation",
+                "description": "Model lưu dữ liệu đa ngôn ngữ cho các bài viết WordPress",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "post_id": {
+                        "type": "integer",
+                        "example": 9
+                    },
+                    "locale": {
+                        "type": "string",
+                        "example": "ja"
+                    },
+                    "post_title": {
+                        "type": "string",
+                        "example": "デジタルで、ビジネスに革新を。"
+                    },
+                    "post_content": {
+                        "type": "string",
+                        "example": "Nội dung tiếng Nhật..."
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Banners",
+            "description": "Banners"
+        },
+        {
+            "name": "News",
+            "description": "News"
+        }
+    ]
+}
