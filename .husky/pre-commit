@@ -1,0 +1,5 @@
+echo "cheking code style with pint..."
+
+docker exec kakusin-api ./vendor/bin/pint
+
+echo "Code style checked!"

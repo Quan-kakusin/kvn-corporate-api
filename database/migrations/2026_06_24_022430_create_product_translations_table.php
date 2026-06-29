@@ -9,10 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('product_translations', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+
+            $table->string('locale', 10);
+            $table->string('name');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

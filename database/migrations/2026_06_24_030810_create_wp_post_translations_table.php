@@ -9,10 +9,14 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('wp_post_translations', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('post_id');
+            $table->string('locale', 10);
+            $table->text('post_title')->nullable();
+            $table->text('post_content')->nullable();
             $table->timestamps();
         });
     }
