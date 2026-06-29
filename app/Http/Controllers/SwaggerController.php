@@ -9,9 +9,9 @@ namespace App\Http\Controllers;
  * description="API Page KakusinVN"
  * )
  *
- * * @OA\Server(
- * url="http://localhost:8000",
- * description="API Server Local"
+ * @OA\Server(
+ * url=L5_SWAGGER_CONST_HOST,
+ * description="API Server"
  * )
  */
 class SwaggerController extends Controller
