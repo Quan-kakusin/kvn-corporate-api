@@ -10,141 +10,127 @@ use OpenApi\Attributes as OA;
 
 class NewsController extends Controller
 {
-    #[OA\Get(
-        path: '/api/news',
-        summary: 'News',
-        tags: ['News']
-    )]
-    #[OA\Parameter(
-        name: 'locale',
-        description: "Mã ngôn ngữ (vi, ja, en). Mặc định là 'vi'",
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string', default: 'vi')
-    )]
-    #[OA\Parameter(
-        name: 'featured',
-        description: 'Lọc theo bài viết nổi bật (truyền true để lọc)',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'boolean')
-    )]
-    #[OA\Parameter(
-        name: 'category',
-        description: 'Lọc theo danh mục (slug: press-release, event, insight)',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Response(
-        response: 200,
-        description: 'Lấy dữ liệu thành công',
-        content: new OA\JsonContent(
-            properties: [
-                new OA\Property(property: 'status', type: 'string', example: 'success'),
-                new OA\Property(
-                    property: 'data',
-                    type: 'array',
-                    items: new OA\Items(
-                        properties: [
-                            new OA\Property(property: 'id', type: 'integer', example: 21),
-                            new OA\Property(property: 'title', type: 'string', example: 'ソフトウェアエンジニアのためのClean Architecture入門'),
-                            new OA\Property(property: 'subtitle', type: 'string', example: 'MASTERING PROFESSIONAL DEVELOPMENT'),
-                            new OA\Property(property: 'image', type: 'string', example: 'http://localhost:8080/wp-content/uploads/2026/06/1-1.jpg'),
-                            new OA\Property(property: 'link', type: 'string', example: 'https://dev-blog.example.com/clean-architecture'),
-                            new OA\Property(property: 'is_featured', type: 'boolean', example: true),
-                            new OA\Property(property: 'slug', type: 'string', example: 'ソフトウェアエンジニアのためのclean-architecture入門'),
-                            new OA\Property(property: 'created_at', type: 'string', example: '2026.06.26'),
-                        ]
-                    )
-                ),
-            ]
-        )
-    )]
-    #[OA\Response(response: 500, description: 'Lỗi server')]
+    #[OA\Get(path: '/api/news', summary: 'Danh sách News (Tổng)', tags: ['News'])]
+    #[OA\Parameter(name: 'locale', in: 'query', schema: new OA\Schema(type: 'string', default: 'vi'))]
+    #[OA\Parameter(name: 'featured', in: 'query', schema: new OA\Schema(type: 'boolean'))]
+    #[OA\Parameter(name: 'category', in: 'query', schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1))]
+    #[OA\Response(response: 200, description: 'Lấy dữ liệu thành công')]
     public function index(Request $request)
     {
         $locale = $request->query('locale', 'vi');
-        $isFeatured = $request->query('featured');
+        $isFeatured = filter_var($request->query('featured'), FILTER_VALIDATE_BOOLEAN);
         $categorySlug = $request->query('category');
-        $perPage = $request->query('limit', 5);
 
-        $categoryCounts = DB::table('wp_term_relationships')
-            ->join('wp_term_taxonomy', 'wp_term_relationships.term_taxonomy_id', '=', 'wp_term_taxonomy.term_taxonomy_id')
-            ->join('wp_terms', 'wp_term_taxonomy.term_id', '=', 'wp_terms.term_id')
-            ->join('wp_posts', 'wp_term_relationships.object_id', '=', 'wp_posts.ID')
-            ->where('wp_posts.post_type', 'news')
-            ->where('wp_posts.post_status', 'publish')
-            ->select('wp_terms.slug', DB::raw('count(*) as total'))
-            ->groupBy('wp_terms.slug')
-            ->pluck('total', 'slug');
+        $query = $this->getBaseNewsQuery($locale);
 
-        $query = WpPost::query()
-            ->where('post_type', 'news')
-            ->where('post_status', 'publish')
-            ->with([
-                'meta',
-                'terms',
-                'translations' => function ($q) use ($locale) {
-                    $q->where('locale', $locale);
-                },
-            ]);
-
-        if ($isFeatured) {
-            $query->whereHas('meta', function ($q) {
-                $q->where('meta_key', 'is_featured')->where('meta_value', 1);
-            });
-        }
-
-        if ($categorySlug) {
+        if ($categorySlug && $categorySlug !== 'all') {
             $query->whereHas('terms', function ($q) use ($categorySlug) {
                 $q->where('slug', $categorySlug);
             });
         }
 
-        $news = $query->orderBy('post_date', 'desc')->paginate($perPage);
+        if ($isFeatured) {
+            $query->whereHas('meta', function ($q) {
+                $q->where('meta_key', 'is_featured')->where('meta_value', 1);
+            });
+            $news = $query->orderBy('post_date', 'desc')->take(3)->get();
+            return response()->json([
+                'status' => 'success',
+                'data' => $this->formatNews($news),
+                'category_counts' => $this->getCategoryCounts(),
+                'meta' => ['total' => $news->count()]
+            ]);
+        }
 
-        $formattedNews = $news->map(function ($item) {
+        $news = $query->orderBy('post_date', 'desc')->paginate(5);
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->formatNews($news->getCollection()),
+            'category_counts' => $this->getCategoryCounts(),
+            'meta' => [
+                'current_page' => $news->currentPage(),
+                'last_page' => $news->lastPage(),
+                'per_page' => 5,
+                'total' => $news->total(),
+            ],
+        ]);
+    }
+
+    #[OA\Get(path: '/api/news/categories', summary: 'Danh sách Category kèm số lượng bài viết', tags: ['News'])]
+    #[OA\Response(response: 200, description: 'Lấy dữ liệu thành công')]
+    public function getByCategory(Request $request)
+    {
+        return response()->json([
+            'data' => $this->getCategoryCounts(),
+        ]);
+    }
+
+    private function getCategoryCounts()
+    {
+        $categories = DB::table('wp_term_relationships')
+            ->join('wp_term_taxonomy', 'wp_term_relationships.term_taxonomy_id', '=', 'wp_term_taxonomy.term_taxonomy_id')
+            ->join('wp_terms', 'wp_term_taxonomy.term_id', '=', 'wp_terms.term_id')
+            ->join('wp_posts', 'wp_term_relationships.object_id', '=', 'wp_posts.ID')
+            ->where('wp_posts.post_type', 'news')
+            ->where('wp_posts.post_status', 'publish')
+            ->select('wp_terms.name', 'wp_terms.slug', DB::raw('count(*) as total'))
+            ->groupBy('wp_terms.name', 'wp_terms.slug')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'title' => $item->name,
+                    'slug' => $item->slug,
+                    'totalPosts' => $item->total,
+                ];
+            })
+            ->toArray();
+
+        // Calculate total across all categories
+        $totalAll = array_sum(array_column($categories, 'totalPosts'));
+
+        // Prepend 'All' category
+        array_unshift($categories, [
+            'title' => 'All',
+            'slug' => 'all',
+            'totalPosts' => $totalAll,
+        ]);
+
+        return $categories;
+    }
+
+    private function formatNews($newsCollection)
+    {
+        return $newsCollection->map(function ($item) {
             $meta = $item->meta->pluck('meta_value', 'meta_key');
-            $translation = $item->translations->first();
-            $title = $translation ? $translation->post_title : $item->post_title;
-
             $imageMeta = $meta['image'] ?? '';
-            $finalImage = $imageMeta;
-            if (is_numeric($imageMeta)) {
-                $imagePost = WpPost::find($imageMeta);
-                $finalImage = $imagePost ? $imagePost->guid : '';
-            }
+            $finalImage = is_numeric($imageMeta) ? (WpPost::find($imageMeta)->guid ?? '') : $imageMeta;
 
-            $category = $item->terms->first();
+            $term = $item->terms->first();
 
             return [
                 'id' => $item->ID,
-                'title' => $title,
+                'title' => ($item->translations->first()->post_title ?? $item->post_title),
                 'subtitle' => $meta['subtitle'] ?? '',
                 'image' => $finalImage,
                 'link' => $meta['link'] ?? '/',
                 'is_featured' => (bool) ($meta['is_featured'] ?? false),
                 'slug' => urldecode($item->post_name),
                 'created_at' => Carbon::parse($item->post_date)->format('Y.m.d'),
-                'category' => $category ? [
-                    'id' => $category->term_id,
-                    'name' => $category->name,
-                    'slug' => urldecode($category->slug),
+                'category' => $term ? [
+                    'id' => $term->term_id,
+                    'name' => $term->name,
+                    'slug' => $term->slug,
                 ] : null,
             ];
         });
+    }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $formattedNews,
-            'category_counts' => $categoryCounts,
-            'meta' => [
-                'current_page' => $news->currentPage(),
-                'last_page' => $news->lastPage(),
-                'per_page' => $news->perPage(),
-                'total' => $news->total(),
-            ],
-        ]);
+    private function getBaseNewsQuery($locale)
+    {
+        return WpPost::query()
+            ->where('post_type', 'news')
+            ->where('post_status', 'publish')
+            ->with(['meta', 'terms', 'translations' => fn($q) => $q->where('locale', $locale)]);
     }
 }
