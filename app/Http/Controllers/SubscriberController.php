@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Mail\SubscriptionSuccess;
 use App\Models\Subscriber;
-use OpenApi\Attributes as OA;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail; // Bổ sung thư viện Mail
-use App\Mail\SubscriptionSuccess; // Bổ sung Mailable vừa tạo
+use OpenApi\Attributes as OA; // Bổ sung Mailable vừa tạo
 
 class SubscriberController extends Controller
 {
@@ -19,7 +19,7 @@ class SubscriberController extends Controller
         required: true,
         content: new OA\JsonContent(
             properties: [
-                new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com')
+                new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com'),
             ]
         )
     )]
@@ -29,7 +29,7 @@ class SubscriberController extends Controller
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'status', type: 'string', example: 'success'),
-                new OA\Property(property: 'message', type: 'string', example: 'You have successfully subscribed to our newsletter.')
+                new OA\Property(property: 'message', type: 'string', example: 'You have successfully subscribed to our newsletter.'),
             ]
         )
     )]
@@ -47,9 +47,9 @@ class SubscriberController extends Controller
                             property: 'email',
                             type: 'array',
                             items: new OA\Items(type: 'string', example: 'This email is already subscribed.')
-                        )
+                        ),
                     ]
-                )
+                ),
             ]
         )
     )]
@@ -69,7 +69,7 @@ class SubscriberController extends Controller
         ]);
 
         // 2. Gửi email thông báo đăng ký thành công
-        Mail::to($request->email)->send(new SubscriptionSuccess());
+        Mail::to($request->email)->send(new SubscriptionSuccess);
 
         return response()->json(['status' => 'success', 'message' => 'You have successfully subscribed to our newsletter.']);
     }

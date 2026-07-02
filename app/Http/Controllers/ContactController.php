@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Contact;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\ContactToCompany;
 use App\Mail\ContactSuccessToCustomer;
-use OpenApi\Attributes as OA;
-use Illuminate\Support\Arr;
+use App\Mail\ContactToCompany;
+use App\Models\Contact;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Mail;
+use OpenApi\Attributes as OA;
 
 class ContactController extends Controller
 {
@@ -28,7 +28,7 @@ class ContactController extends Controller
                 new OA\Property(property: 'company', type: 'string', example: 'Công ty Kakusin'),
                 new OA\Property(property: 'email', type: 'string', example: 'quan@example.com'),
                 new OA\Property(property: 'content', type: 'string', example: 'Nội dung cần liên hệ...'),
-                new OA\Property(property: 'agree', type: 'boolean', example: true)
+                new OA\Property(property: 'agree', type: 'boolean', example: true),
             ]
         )
     )]
@@ -38,7 +38,7 @@ class ContactController extends Controller
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'status', type: 'string', example: 'success'),
-                new OA\Property(property: 'message', type: 'string', example: 'Contact information has been successfully submitted.')
+                new OA\Property(property: 'message', type: 'string', example: 'Contact information has been successfully submitted.'),
             ]
         )
     )]
@@ -48,7 +48,7 @@ class ContactController extends Controller
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'status', type: 'string', example: 'error'),
-                new OA\Property(property: 'message', type: 'string', example: 'Bạn đã đạt giới hạn gửi liên hệ trong ngày. Vui lòng thử lại vào ngày mai.')
+                new OA\Property(property: 'message', type: 'string', example: 'Bạn đã đạt giới hạn gửi liên hệ trong ngày. Vui lòng thử lại vào ngày mai.'),
             ]
         )
     )]
@@ -56,11 +56,11 @@ class ContactController extends Controller
     {
         $validatedData = $request->validate([
             'category' => 'required|string|max:150',
-            'name'     => 'required|string|max:255',
-            'company'  => 'nullable|string|max:255',
-            'email'    => 'required|email|max:255',
-            'content'  => 'required|string',
-            'agree'    => 'required|boolean',
+            'name' => 'required|string|max:255',
+            'company' => 'nullable|string|max:255',
+            'email' => 'required|email|max:255',
+            'content' => 'required|string',
+            'agree' => 'required|boolean',
         ]);
 
         $dailyRequests = Contact::where('email', $validatedData['email'])
@@ -70,7 +70,7 @@ class ContactController extends Controller
         if ($dailyRequests >= 5) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You have reached the daily limit for sending contact requests. Please try again tomorrow.'
+                'message' => 'You have reached the daily limit for sending contact requests. Please try again tomorrow.',
             ], 429);
         }
 
@@ -86,13 +86,14 @@ class ContactController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Contact information has been successfully submitted.'
+                'message' => 'Contact information has been successfully submitted.',
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Contact Submission Error: ' . $e->getMessage());
+            \Log::error('Contact Submission Error: '.$e->getMessage());
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'Server error, please try again later.'
+                'message' => 'Server error, please try again later.',
             ], 500);
         }
     }

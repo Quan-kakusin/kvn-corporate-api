@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -13,6 +12,7 @@ use Illuminate\Queue\SerializesModels;
 class NewPostNotification extends Mailable
 {
     use Queueable, SerializesModels;
+
     public $newsData;
 
     /**
@@ -29,7 +29,7 @@ class NewPostNotification extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Post Notification: ' . $this->newsData['title'],
+            subject: 'New Post Notification: '.$this->newsData['title'],
         );
     }
 

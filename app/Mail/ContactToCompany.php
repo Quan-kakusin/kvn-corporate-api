@@ -18,7 +18,7 @@ class ContactToCompany extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Contact: [' . $this->contact->category . '] từ ' . $this->contact->name,
+            subject: 'New Contact: ['.$this->contact->category.'] từ '.$this->contact->name,
         );
     }
 

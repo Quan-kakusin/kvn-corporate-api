@@ -35,15 +35,17 @@ class NewsController extends Controller
                 $q->where('meta_key', 'is_featured')->where('meta_value', 1);
             });
             $news = $query->orderBy('post_date', 'desc')->take(3)->get();
+
             return response()->json([
                 'status' => 'success',
                 'data' => $this->formatNews($news),
                 'category_counts' => $this->getCategoryCounts(),
-                'meta' => ['total' => $news->count()]
+                'meta' => ['total' => $news->count()],
             ]);
         }
 
         $news = $query->orderBy('post_date', 'desc')->paginate(5);
+
         return response()->json([
             'status' => 'success',
             'data' => $this->formatNews($news->getCollection()),
@@ -130,14 +132,14 @@ class NewsController extends Controller
         return WpPost::query()
             ->where('post_type', 'news')
             ->where('post_status', 'publish')
-            ->with(['meta', 'terms', 'translations' => fn($q) => $q->where('locale', $locale)]);
+            ->with(['meta', 'terms', 'translations' => fn ($q) => $q->where('locale', $locale)]);
     }
+
     #[OA\Get(path: '/api/news/{slug}', summary: 'Chi tiết News', tags: ['News'])]
     #[OA\Parameter(name: 'slug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'locale', in: 'query', schema: new OA\Schema(type: 'string', default: 'vi'))]
     #[OA\Response(response: 200, description: 'Lấy dữ liệu thành công')]
     #[OA\Response(response: 404, description: 'Không tìm thấy bài viết')]
-
     public function show($slug, Request $request)
     {
         $locale = $request->query('locale', 'vi');
@@ -146,10 +148,10 @@ class NewsController extends Controller
             ->where('post_type', 'news')
             ->where('post_status', 'publish')
             ->bySlug($slug)
-            ->with(['meta', 'terms', 'translations' => fn($q) => $q->where('locale', $locale)])
+            ->with(['meta', 'terms', 'translations' => fn ($q) => $q->where('locale', $locale)])
             ->first();
 
-        if (!$post) {
+        if (! $post) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'News not found',
@@ -178,7 +180,7 @@ class NewsController extends Controller
                     'name' => $term->name,
                     'slug' => $term->slug,
                 ] : null,
-            ]
+            ],
         ], 200);
     }
 }

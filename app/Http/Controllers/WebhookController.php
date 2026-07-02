@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Subscriber;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\NewPostNotification;
+use App\Models\Subscriber;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use OpenApi\Attributes as OA;
 
 class WebhookController extends Controller
@@ -22,7 +22,7 @@ class WebhookController extends Controller
                 new OA\Property(property: 'title', type: 'string', example: 'Tiêu đề bài viết mới'),
                 new OA\Property(property: 'link', type: 'string', example: 'https://example.com/news/article-1'),
                 new OA\Property(property: 'image', type: 'string', example: 'https://example.com/image.jpg'),
-                new OA\Property(property: 'subtitle', type: 'string', example: 'Mô tả ngắn gọn về bài viết')
+                new OA\Property(property: 'subtitle', type: 'string', example: 'Mô tả ngắn gọn về bài viết'),
             ]
         )
     )]
@@ -32,7 +32,7 @@ class WebhookController extends Controller
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'status', type: 'string', example: 'success'),
-                new OA\Property(property: 'message', type: 'string', example: 'Notifications sent to subscribers.')
+                new OA\Property(property: 'message', type: 'string', example: 'Notifications sent to subscribers.'),
             ]
         )
     )]
@@ -41,7 +41,7 @@ class WebhookController extends Controller
         description: 'Lỗi server khi gửi mail',
         content: new OA\JsonContent(
             properties: [
-                new OA\Property(property: 'message', type: 'string', example: 'Server Error')
+                new OA\Property(property: 'message', type: 'string', example: 'Server Error'),
             ]
         )
     )]

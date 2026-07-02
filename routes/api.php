@@ -1,11 +1,11 @@
 <?php
 
 use App\Http\Controllers\BannersController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\NewsController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\WebhookController;
-use App\Http\Controllers\ContactController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/banners', [BannersController::class, 'getBanners']);
 Route::get('/news', [NewsController::class, 'index']);
