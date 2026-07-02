@@ -12,8 +12,8 @@ return new class extends Migration
     public function up()
     {
         Schema::table('contacts', function (Blueprint $table) {
-            // Thêm cột category ngay sau cột phone cho gọn gàng
-            $table->string('category')->nullable()->after('phone');
+            // Xóa after('phone') vì sđt nằm bên bảng Profile
+            $table->string('category')->nullable();
         });
     }
 
@@ -23,7 +23,6 @@ return new class extends Migration
     public function down()
     {
         Schema::table('contacts', function (Blueprint $table) {
-            // Rollback thì sẽ xóa cột này
             $table->dropColumn('category');
         });
     }
