@@ -41,6 +41,80 @@
                 }
             }
         },
+        "/api/contact": {
+            "post": {
+                "tags": [
+                    "Contact"
+                ],
+                "summary": "Nhận thông tin liên hệ và gửi email thông báo",
+                "operationId": "23d287b7052bd07a4c20670cbb41dcc1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "category",
+                                    "name",
+                                    "email",
+                                    "content",
+                                    "agree"
+                                ],
+                                "properties": {
+                                    "category": {
+                                        "type": "string",
+                                        "example": "Hỗ trợ kỹ thuật"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Trần Anh Quân"
+                                    },
+                                    "company": {
+                                        "type": "string",
+                                        "example": "Công ty Kakusin"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "quan@example.com"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Nội dung cần liên hệ..."
+                                    },
+                                    "agree": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Gửi liên hệ thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Thông tin liên hệ đã được gửi thành công."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/news": {
             "get": {
                 "tags": [
@@ -263,9 +337,17 @@
                         "type": "integer",
                         "example": 1
                     },
+                    "category": {
+                        "type": "string",
+                        "example": "Tư vấn dịch vụ"
+                    },
                     "name": {
                         "type": "string",
                         "example": "Trần Anh Quân"
+                    },
+                    "company": {
+                        "type": "string",
+                        "example": "Kakusin"
                     },
                     "email": {
                         "type": "string",
@@ -273,11 +355,16 @@
                     },
                     "phone": {
                         "type": "string",
-                        "example": "0901234567"
+                        "example": "0901234567",
+                        "nullable": true
                     },
-                    "message": {
+                    "content": {
                         "type": "string",
-                        "example": "Tôi cần tư vấn..."
+                        "example": "Tôi cần tư vấn chi tiết..."
+                    },
+                    "agree": {
+                        "type": "boolean",
+                        "example": true
                     },
                     "is_read": {
                         "type": "boolean",
@@ -505,6 +592,10 @@
         {
             "name": "Banners",
             "description": "Banners"
+        },
+        {
+            "name": "Contact",
+            "description": "Contact"
         },
         {
             "name": "News",

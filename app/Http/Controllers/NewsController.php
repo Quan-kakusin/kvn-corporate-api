@@ -113,7 +113,6 @@ class NewsController extends Controller
                 'title' => ($item->translations->first()->post_title ?? $item->post_title),
                 'subtitle' => $meta['subtitle'] ?? '',
                 'image' => $finalImage,
-                'link' => $meta['link'] ?? '/',
                 'is_featured' => (bool) ($meta['is_featured'] ?? false),
                 'slug' => urldecode($item->post_name),
                 'created_at' => Carbon::parse($item->post_date)->format('Y.m.d'),

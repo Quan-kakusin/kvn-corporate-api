@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Subscriber;
 use OpenApi\Attributes as OA;
+use Illuminate\Support\Facades\Mail; // Bổ sung thư viện Mail
+use App\Mail\SubscriptionSuccess; // Bổ sung Mailable vừa tạo
 
 class SubscriberController extends Controller
 {
     #[OA\Post(
-        path: '/api/subscriber', // Đã cập nhật path theo route mới
+        path: '/api/subscriber',
         summary: 'Đăng ký nhận bản tin (Newsletter)',
         tags: ['Subscriber']
     )]
@@ -60,10 +62,14 @@ class SubscriberController extends Controller
             ['email.unique' => 'This email is already subscribed.']
         );
 
+        // 1. Lưu vào Database
         Subscriber::create([
             'email' => $request->email,
             'is_active' => true,
         ]);
+
+        // 2. Gửi email thông báo đăng ký thành công
+        Mail::to($request->email)->send(new SubscriptionSuccess());
 
         return response()->json(['status' => 'success', 'message' => 'You have successfully subscribed to our newsletter.']);
     }
