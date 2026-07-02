@@ -53,4 +53,12 @@ class WpPost extends Model
             'term_taxonomy_id'
         )->withPivot('term_taxonomy_id');
     }
+
+    public function scopeBySlug($query, $slug)
+    {
+        $rawSlug = urldecode($slug);
+        $wpEncodedSlug = strtolower(urlencode($rawSlug));
+
+        return $query->whereIn('post_name', [$rawSlug, $wpEncodedSlug]);
+    }
 }

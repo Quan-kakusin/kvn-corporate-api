@@ -132,4 +132,53 @@ class NewsController extends Controller
             ->where('post_status', 'publish')
             ->with(['meta', 'terms', 'translations' => fn($q) => $q->where('locale', $locale)]);
     }
+    #[OA\Get(path: '/api/news/{slug}', summary: 'Chi tiết News', tags: ['News'])]
+    #[OA\Parameter(name: 'slug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'locale', in: 'query', schema: new OA\Schema(type: 'string', default: 'vi'))]
+    #[OA\Response(response: 200, description: 'Lấy dữ liệu thành công')]
+    #[OA\Response(response: 404, description: 'Không tìm thấy bài viết')]
+
+    public function show($slug, Request $request)
+    {
+        $locale = $request->query('locale', 'vi');
+
+        $post = WpPost::query()
+            ->where('post_type', 'news')
+            ->where('post_status', 'publish')
+            ->bySlug($slug)
+            ->with(['meta', 'terms', 'translations' => fn($q) => $q->where('locale', $locale)])
+            ->first();
+
+        if (!$post) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'News not found',
+            ], 404);
+        }
+
+        $meta = $post->meta->pluck('meta_value', 'meta_key');
+        $imageMeta = $meta['image'] ?? '';
+        $finalImage = is_numeric($imageMeta) ? (WpPost::find($imageMeta)->guid ?? '') : $imageMeta;
+
+        $term = $post->terms->first();
+        $title = $post->translations->first()->post_title ?? $post->post_title;
+
+        $content = $post->translations->first()->post_content ?? $post->post_content;
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id' => $post->ID,
+                'title' => $title,
+                'content' => $content,
+                'slug' => urldecode($post->post_name),
+                'created_at' => Carbon::parse($post->post_date)->format('Y.m.d'),
+                'category' => $term ? [
+                    'id' => $term->term_id,
+                    'name' => $term->name,
+                    'slug' => $term->slug,
+                ] : null,
+            ]
+        ], 200);
+    }
 }
