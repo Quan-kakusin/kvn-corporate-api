@@ -11,18 +11,19 @@ use OpenApi\Attributes as OA;
 class NewsController extends Controller
 {
     #[OA\Get(path: '/api/news', summary: 'Danh sách News (Tổng)', tags: ['News'])]
-    #[OA\Parameter(name: 'locale', in: 'query', schema: new OA\Schema(type: 'string', default: 'vi'))]
+    #[OA\Parameter(name: 'locale', in: 'query', schema: new OA\Schema(type: 'string', default: 'ja'))]
     #[OA\Parameter(name: 'featured', in: 'query', schema: new OA\Schema(type: 'boolean'))]
     #[OA\Parameter(name: 'category', in: 'query', schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1))]
     #[OA\Response(response: 200, description: 'Lấy dữ liệu thành công')]
     public function index(Request $request)
     {
-        $locale = $request->query('locale', 'vi');
+        $locale = $request->query('locale', 'ja');
         $isFeatured = filter_var($request->query('featured'), FILTER_VALIDATE_BOOLEAN);
         $categorySlug = $request->query('category');
 
-        $query = $this->getBaseNewsQuery($locale);
+
+        $query = $this->getBaseNewsQuery();
 
         if ($categorySlug && $categorySlug !== 'all') {
             $query->whereHas('terms', function ($q) use ($categorySlug) {
@@ -37,7 +38,7 @@ class NewsController extends Controller
             $news = $query->orderBy('post_date', 'desc')->take(3)->get();
             return response()->json([
                 'status' => 'success',
-                'data' => $this->formatNews($news),
+                'data' => $this->formatNews($news, $locale),
                 'category_counts' => $this->getCategoryCounts(),
                 'meta' => ['total' => $news->count()]
             ]);
@@ -46,7 +47,7 @@ class NewsController extends Controller
         $news = $query->orderBy('post_date', 'desc')->paginate(5);
         return response()->json([
             'status' => 'success',
-            'data' => $this->formatNews($news->getCollection()),
+            'data' => $this->formatNews($news->getCollection(), $locale),
             'category_counts' => $this->getCategoryCounts(),
             'meta' => [
                 'current_page' => $news->currentPage(),
@@ -74,11 +75,12 @@ class NewsController extends Controller
             ->join('wp_posts', 'wp_term_relationships.object_id', '=', 'wp_posts.ID')
             ->where('wp_posts.post_type', 'news')
             ->where('wp_posts.post_status', 'publish')
-            ->select('wp_terms.name', 'wp_terms.slug', DB::raw('count(*) as total'))
-            ->groupBy('wp_terms.name', 'wp_terms.slug')
+            ->select('wp_terms.term_id', 'wp_terms.name', 'wp_terms.slug', DB::raw('count(*) as total'))
+            ->groupBy('wp_terms.term_id', 'wp_terms.name', 'wp_terms.slug')
             ->get()
             ->map(function ($item) {
                 return [
+                    'id' => $item->term_id,
                     'title' => $item->name,
                     'slug' => $item->slug,
                     'totalPosts' => $item->total,
@@ -86,11 +88,10 @@ class NewsController extends Controller
             })
             ->toArray();
 
-        // Calculate total across all categories
         $totalAll = array_sum(array_column($categories, 'totalPosts'));
 
-        // Prepend 'All' category
         array_unshift($categories, [
+            'id' => 0,
             'title' => 'All',
             'slug' => 'all',
             'totalPosts' => $totalAll,
@@ -99,20 +100,37 @@ class NewsController extends Controller
         return $categories;
     }
 
-    private function formatNews($newsCollection)
+
+    private function formatNews($newsCollection, $locale)
     {
-        return $newsCollection->map(function ($item) {
+        return $newsCollection->map(function ($item) use ($locale) {
             $meta = $item->meta->pluck('meta_value', 'meta_key');
-            $imageMeta = $meta['image'] ?? '';
-            $finalImage = is_numeric($imageMeta) ? (WpPost::find($imageMeta)->guid ?? '') : $imageMeta;
+
+            $imageId = $meta['image'] ?? null;
+            $imageUrl = '';
+
+            if (is_numeric($imageId)) {
+                $attachment = DB::table('wp_posts')
+                    ->where('ID', $imageId)
+                    ->where('post_type', 'attachment')
+                    ->first();
+                $imageUrl = $attachment ? $attachment->guid : '';
+            } else {
+                $imageUrl = $imageId ?? '';
+            }
 
             $term = $item->terms->first();
 
+            $title = $meta['title_' . $locale] ?? $meta['title_ja'] ?? $item->post_title;
+            $subtitle = $meta['subtitle_' . $locale] ?? $meta['subtitle_ja'] ?? '';
+
             return [
                 'id' => $item->ID,
-                'title' => ($item->translations->first()->post_title ?? $item->post_title),
-                'subtitle' => $meta['subtitle'] ?? '',
-                'image' => $finalImage,
+                'title' => $title,
+                'subtitle' => $subtitle,
+                'image' => [
+                    'url' => $imageUrl
+                ],
                 'is_featured' => (bool) ($meta['is_featured'] ?? false),
                 'slug' => urldecode($item->post_name),
                 'created_at' => Carbon::parse($item->post_date)->format('Y.m.d'),
@@ -125,28 +143,29 @@ class NewsController extends Controller
         });
     }
 
-    private function getBaseNewsQuery($locale)
+
+    private function getBaseNewsQuery()
     {
         return WpPost::query()
             ->where('post_type', 'news')
             ->where('post_status', 'publish')
-            ->with(['meta', 'terms', 'translations' => fn($q) => $q->where('locale', $locale)]);
+            ->with(['meta', 'terms']);
     }
+
     #[OA\Get(path: '/api/news/{slug}', summary: 'Chi tiết News', tags: ['News'])]
     #[OA\Parameter(name: 'slug', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'locale', in: 'query', schema: new OA\Schema(type: 'string', default: 'vi'))]
+    #[OA\Parameter(name: 'locale', in: 'query', schema: new OA\Schema(type: 'string', default: 'ja'))]
     #[OA\Response(response: 200, description: 'Lấy dữ liệu thành công')]
     #[OA\Response(response: 404, description: 'Không tìm thấy bài viết')]
-
     public function show($slug, Request $request)
     {
-        $locale = $request->query('locale', 'vi');
+        $locale = $request->query('locale', 'ja');
 
         $post = WpPost::query()
             ->where('post_type', 'news')
             ->where('post_status', 'publish')
             ->bySlug($slug)
-            ->with(['meta', 'terms', 'translations' => fn($q) => $q->where('locale', $locale)])
+            ->with(['meta', 'terms']) // Bỏ translations
             ->first();
 
         if (!$post) {
@@ -157,13 +176,24 @@ class NewsController extends Controller
         }
 
         $meta = $post->meta->pluck('meta_value', 'meta_key');
-        $imageMeta = $meta['image'] ?? '';
-        $finalImage = is_numeric($imageMeta) ? (WpPost::find($imageMeta)->guid ?? '') : $imageMeta;
+
+        $imageId = $meta['image'] ?? null;
+        $imageUrl = '';
+
+        if (is_numeric($imageId)) {
+            $attachment = DB::table('wp_posts')
+                ->where('ID', $imageId)
+                ->where('post_type', 'attachment')
+                ->first();
+            $imageUrl = $attachment ? $attachment->guid : '';
+        } else {
+            $imageUrl = $imageId ?? '';
+        }
 
         $term = $post->terms->first();
-        $title = $post->translations->first()->post_title ?? $post->post_title;
 
-        $content = $post->translations->first()->post_content ?? $post->post_content;
+        $title = $meta['title_' . $locale] ?? $meta['title_ja'] ?? $post->post_title;
+        $content = $meta['content_' . $locale] ?? $meta['content_ja'] ?? $post->post_content;
 
         return response()->json([
             'status' => 'success',
@@ -171,6 +201,9 @@ class NewsController extends Controller
                 'id' => $post->ID,
                 'title' => $title,
                 'content' => $content,
+                'image' => [
+                    'url' => $imageUrl
+                ],
                 'slug' => urldecode($post->post_name),
                 'created_at' => Carbon::parse($post->post_date)->format('Y.m.d'),
                 'category' => $term ? [
