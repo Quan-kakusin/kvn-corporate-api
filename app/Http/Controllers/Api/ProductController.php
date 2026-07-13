@@ -1,15 +1,19 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Wordpress\WpPost;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use OpenApi\Attributes as OA;
+use App\Traits\SeoFormatterTrait;
 
 class ProductController extends Controller
 {
+    use SeoFormatterTrait;
+
     #[OA\Get(path: '/api/products', summary: 'Danh sách Product (Tổng/Phân trang)', tags: ['Products'])]
     #[OA\Parameter(name: 'locale', in: 'query', schema: new OA\Schema(type: 'string', default: 'ja'))]
     #[OA\Parameter(name: 'featured', in: 'query', schema: new OA\Schema(type: 'boolean'))]
@@ -24,7 +28,6 @@ class ProductController extends Controller
 
         $query = $this->getBaseProductQuery();
 
-
         if ($categorySlug && $categorySlug !== 'all') {
             $query->whereHas('terms', function ($q) use ($categorySlug) {
                 $q->join('wp_term_taxonomy', 'wp_terms.term_id', '=', 'wp_term_taxonomy.term_id')
@@ -38,11 +41,12 @@ class ProductController extends Controller
                 $q->where('meta_key', 'is_featured')->where('meta_value', 1);
             });
             $products = $query->orderBy('post_date', 'desc')->take(3)->get();
+
             return response()->json([
                 'status' => 'success',
                 'data' => $this->formatProduct($products, $locale),
                 'category_counts' => $this->getCategoryCounts(),
-                'meta' => ['total' => $products->count()]
+                'meta' => ['total' => $products->count()],
             ]);
         }
 
@@ -69,6 +73,9 @@ class ProductController extends Controller
     public function show(Request $request, $slug)
     {
         $locale = $request->query('locale', 'ja');
+        if (!in_array($locale, ['ja', 'vi', 'en'])) {
+            $locale = 'ja';
+        }
 
         $post = WpPost::query()
             ->where('post_type', 'products')
@@ -77,10 +84,10 @@ class ProductController extends Controller
             ->with(['meta', 'terms'])
             ->first();
 
-        if (!$post) {
+        if (! $post) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Product not found'
+                'message' => 'Product not found',
             ], 404);
         }
 
@@ -91,9 +98,9 @@ class ProductController extends Controller
 
         $term = $post->terms->where('taxonomy', 'product_category')->first() ?? $post->terms->first();
 
-        $title    = $meta['title_' . $locale] ?? $meta['title_ja'] ?? $post->post_title;
+        $title = $meta['title_' . $locale] ?? $meta['title_ja'] ?? $post->post_title;
         $subtitle = $meta['subtitle_' . $locale] ?? $meta['subtitle_ja'] ?? '';
-        $content  = $meta['content_' . $locale] ?? $meta['content_ja'] ?? $post->post_content;
+        $content = $meta['content_' . $locale] ?? $meta['content_ja'] ?? $post->post_content;
 
         return response()->json([
             'status' => 'success',
@@ -103,7 +110,7 @@ class ProductController extends Controller
                 'subtitle' => $subtitle,
                 'content' => $content,
                 'image' => [
-                    'url' => $imageUrl
+                    'url' => $imageUrl,
                 ],
                 'slug' => urldecode($post->post_name),
                 'created_at' => Carbon::parse($post->post_date)->format('Y.m.d'),
@@ -112,11 +119,10 @@ class ProductController extends Controller
                     'name' => $term->name,
                     'slug' => $term->slug,
                 ] : null,
-            ]
+                'seo' => $this->buildSeoData($post, $meta, $locale, 'products')
+            ],
         ], 200);
     }
-
-
 
     private function getBaseProductQuery()
     {
@@ -178,7 +184,7 @@ class ProductController extends Controller
                 'title' => $title,
                 'subtitle' => $subtitle,
                 'image' => [
-                    'url' => $imageUrl
+                    'url' => $imageUrl,
                 ],
                 'is_featured' => (bool) ($meta['is_featured'] ?? false),
                 'slug' => urldecode($item->post_name),
@@ -194,13 +200,16 @@ class ProductController extends Controller
 
     private function getImageUrl($imageId)
     {
-        if (!$imageId) return '';
+        if (! $imageId) {
+            return '';
+        }
 
         if (is_numeric($imageId)) {
             $attachment = DB::table('wp_posts')
                 ->where('ID', $imageId)
                 ->where('post_type', 'attachment')
                 ->first();
+
             return $attachment ? $attachment->guid : '';
         }
 

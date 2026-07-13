@@ -7,47 +7,18 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8000",
+            "url": "https://kakusinvn.duckdns.org",
             "description": "API Server"
         }
     ],
     "paths": {
-        "/api/banners": {
-            "get": {
-                "tags": [
-                    "Banners"
-                ],
-                "summary": "Lấy danh sách Banners",
-                "operationId": "25be441ec44a17512296339ef48da34c",
-                "parameters": [
-                    {
-                        "name": "locale",
-                        "in": "header",
-                        "description": "Mã ngôn ngữ (vi, ja, en). Mặc định là 'vi'",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "vi"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Lấy dữ liệu thành công"
-                    },
-                    "500": {
-                        "description": "Lỗi server"
-                    }
-                }
-            }
-        },
         "/api/contact": {
             "post": {
                 "tags": [
                     "Contact"
                 ],
                 "summary": "Obtain contact information and send notification emails.",
-                "operationId": "23d287b7052bd07a4c20670cbb41dcc1",
+                "operationId": "9eda9ed95afbd9946c93c6caba6b8ff2",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -141,7 +112,7 @@
                     "News"
                 ],
                 "summary": "Danh sách News (Tổng)",
-                "operationId": "9bfe744cf19dcb58e9ab9677c29ee6c7",
+                "operationId": "a03e1a336bc332d11c385fe176757db9",
                 "parameters": [
                     {
                         "name": "locale",
@@ -187,7 +158,7 @@
                     "News"
                 ],
                 "summary": "Danh sách Category kèm số lượng bài viết",
-                "operationId": "fa1156a0f925e9414e8f286f4e9291ad",
+                "operationId": "74b5815d00afa7564e2a3b25744c0668",
                 "responses": {
                     "200": {
                         "description": "Lấy dữ liệu thành công"
@@ -201,7 +172,7 @@
                     "News"
                 ],
                 "summary": "Chi tiết News",
-                "operationId": "6f16ebaf3fe9643317a035fba8c160ea",
+                "operationId": "ba93f1c65324d8a38ae2227d5ac93caf",
                 "parameters": [
                     {
                         "name": "slug",
@@ -236,7 +207,7 @@
                     "Products"
                 ],
                 "summary": "Danh sách Product (Tổng/Phân trang)",
-                "operationId": "1bfaa78d1c2c3848ab8165c5dadcad3e",
+                "operationId": "d97d1c3727cbac49708b85f7d11f7d58",
                 "parameters": [
                     {
                         "name": "locale",
@@ -283,7 +254,7 @@
                     "Products"
                 ],
                 "summary": "Chi tiết Product",
-                "operationId": "2eb94cf22f00aa181040441a8ae7b07e",
+                "operationId": "5bbb6d725346d38781b256ed5c715d62",
                 "parameters": [
                     {
                         "name": "slug",
@@ -312,13 +283,42 @@
                 }
             }
         },
+        "/api/seo/pages": {
+            "get": {
+                "tags": [
+                    "SEO"
+                ],
+                "summary": "Lấy cấu hình SEO đa ngôn ngữ của trang tĩnh",
+                "operationId": "134ddcdc4d4cc55577f117dee2b39e4b",
+                "parameters": [
+                    {
+                        "name": "locale",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "ja",
+                            "enum": [
+                                "ja",
+                                "vi",
+                                "en"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lấy dữ liệu SEO thành công"
+                    }
+                }
+            }
+        },
         "/api/services": {
             "get": {
                 "tags": [
                     "Services"
                 ],
                 "summary": "Danh sách Services",
-                "operationId": "4c175c5d6594b4a5112bbe15a46e2bb4",
+                "operationId": "97de511018def32ca0ccbc800756c538",
                 "parameters": [
                     {
                         "name": "locale",
@@ -342,7 +342,7 @@
                     "Subscriber"
                 ],
                 "summary": "Đăng ký nhận bản tin (Newsletter)",
-                "operationId": "ed25c502bbedb28f0c7ae29d43420cc1",
+                "operationId": "b73d85ff05699b1f085da330d936b25d",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -418,7 +418,7 @@
                     "Webhook"
                 ],
                 "summary": "Webhook nhận thông báo bài viết mới từ WordPress",
-                "operationId": "f45dfbd0419198df912683a4259508f9",
+                "operationId": "9d3ee15e2655b4ef808c5620d44416b3",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -538,110 +538,6 @@
                 },
                 "type": "object"
             },
-            "Product": {
-                "title": "Product",
-                "description": "Cấu trúc gốc của Sản phẩm",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "image_url": {
-                        "type": "string",
-                        "example": "https://example.com/product.jpg"
-                    },
-                    "is_active": {
-                        "type": "boolean",
-                        "example": true
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "type": "object"
-            },
-            "ProductTranslation": {
-                "title": "ProductTranslation",
-                "description": "Dữ liệu đa ngôn ngữ của Sản phẩm",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "product_id": {
-                        "type": "integer",
-                        "example": 10
-                    },
-                    "locale": {
-                        "type": "string",
-                        "example": "vi"
-                    },
-                    "name": {
-                        "type": "string",
-                        "example": "Tên sản phẩm việt hóa"
-                    },
-                    "description": {
-                        "type": "string",
-                        "example": "Mô tả chi tiết..."
-                    }
-                },
-                "type": "object"
-            },
-            "Service": {
-                "title": "Service",
-                "description": "Cấu trúc gốc của Dịch vụ",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "icon_url": {
-                        "type": "string",
-                        "example": "fa-solid fa-gear"
-                    },
-                    "is_active": {
-                        "type": "boolean",
-                        "example": true
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "type": "object"
-            },
-            "ServiceTranslation": {
-                "title": "ServiceTranslation",
-                "description": "Dữ liệu đa ngôn ngữ của Dịch vụ",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "service_id": {
-                        "type": "integer",
-                        "example": 5
-                    },
-                    "locale": {
-                        "type": "string",
-                        "example": "en"
-                    },
-                    "name": {
-                        "type": "string",
-                        "example": "Web Development"
-                    },
-                    "short_description": {
-                        "type": "string",
-                        "example": "Mô tả ngắn gọn..."
-                    },
-                    "content": {
-                        "type": "string",
-                        "example": "Nội dung bài viết chi tiết..."
-                    }
-                },
-                "type": "object"
-            },
             "Subscriber": {
                 "title": "Subscriber",
                 "description": "Model đăng ký nhận bản tin",
@@ -719,41 +615,10 @@
                     }
                 },
                 "type": "object"
-            },
-            "WpPostTranslation": {
-                "title": "WpPostTranslation",
-                "description": "Model lưu dữ liệu đa ngôn ngữ cho các bài viết WordPress",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "post_id": {
-                        "type": "integer",
-                        "example": 9
-                    },
-                    "locale": {
-                        "type": "string",
-                        "example": "ja"
-                    },
-                    "post_title": {
-                        "type": "string",
-                        "example": "デジタルで、ビジネスに革新を。"
-                    },
-                    "post_content": {
-                        "type": "string",
-                        "example": "Nội dung tiếng Nhật..."
-                    }
-                },
-                "type": "object"
             }
         }
     },
     "tags": [
-        {
-            "name": "Banners",
-            "description": "Banners"
-        },
         {
             "name": "Contact",
             "description": "Contact"
@@ -765,6 +630,10 @@
         {
             "name": "Products",
             "description": "Products"
+        },
+        {
+            "name": "SEO",
+            "description": "SEO"
         },
         {
             "name": "Services",

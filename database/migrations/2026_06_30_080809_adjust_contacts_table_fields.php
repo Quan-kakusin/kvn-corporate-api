@@ -15,7 +15,7 @@ return new class extends Migration
             // Không có 'message' và chưa có 'content' thì tạo luôn cột 'content'.
             if (Schema::hasColumn('contacts', 'message')) {
                 $table->renameColumn('message', 'content');
-            } elseif (!Schema::hasColumn('contacts', 'content')) {
+            } elseif (! Schema::hasColumn('contacts', 'content')) {
                 $table->text('content')->nullable(); // Bro có thể đổi 'text' thành 'string' tùy thiết kế
             }
 
