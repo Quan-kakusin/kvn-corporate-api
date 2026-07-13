@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Integration;
 
 use App\Http\Controllers\Controller;
-
 use App\Mail\NewPostNotification;
 use App\Models\Subscriber;
 use Illuminate\Http\Request;

@@ -16,14 +16,14 @@ trait SeoFormatterTrait
 
         // 2. Description: Lấy Yoast, nếu không có thì cắt 150 ký tự từ nội dung bài viết
         $seoDesc = $meta['_yoast_wpseo_metadesc'] ?? '';
-        if (empty($seoDesc) && !empty($post->post_content)) {
-            $seoDesc = mb_substr(strip_tags($post->post_content), 0, 150) . '...';
+        if (empty($seoDesc) && ! empty($post->post_content)) {
+            $seoDesc = mb_substr(strip_tags($post->post_content), 0, 150).'...';
         }
 
         // Xử lý link Canonical chuẩn
         $slug = $post->post_name === 'home' ? '' : $post->post_name;
-        $canonicalPath = $pathPrefix ? '/' . trim($pathPrefix, '/') . '/' . $slug : '/' . $slug;
-        $canonicalUrl = rtrim(env('FRONTEND_URL', 'https://example.com'), '/') . $canonicalPath;
+        $canonicalPath = $pathPrefix ? '/'.trim($pathPrefix, '/').'/'.$slug : '/'.$slug;
+        $canonicalUrl = rtrim(env('FRONTEND_URL', 'https://example.com'), '/').$canonicalPath;
 
         // 3. Image: Lấy Yoast OG, fallback sang Thumbnail, hoặc meta ảnh bài viết
         $ogImageId = $meta['_yoast_wpseo_opengraph-image-id'] ?? $meta['_thumbnail_id'] ?? null;
@@ -63,8 +63,8 @@ trait SeoFormatterTrait
                 '@type' => 'Organization',
                 'name' => 'KAKUSIN VN',
                 'url' => env('FRONTEND_URL', 'https://example.com'),
-                'logo' => env('FRONTEND_URL', 'https://example.com') . '/logo.png',
-            ]
+                'logo' => env('FRONTEND_URL', 'https://example.com').'/logo.png',
+            ],
         ];
     }
 
@@ -79,10 +79,11 @@ trait SeoFormatterTrait
                 ->where('ID', $imageId)
                 ->where('post_type', 'attachment')
                 ->first();
+
             return $attachment ? $attachment->guid : $fallbackUrl;
         }
 
         // Nếu đã là URL rồi thì trả về luôn
-        return !empty($imageId) ? $imageId : $fallbackUrl;
+        return ! empty($imageId) ? $imageId : $fallbackUrl;
     }
 }

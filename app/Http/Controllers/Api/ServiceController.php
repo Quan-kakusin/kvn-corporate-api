@@ -29,14 +29,14 @@ class ServiceController extends Controller
         $attachmentIds = [];
         foreach ($services as $item) {
             $meta = $item->meta->pluck('meta_value', 'meta_key');
-            if (!empty($meta['service_image'])) {
+            if (! empty($meta['service_image'])) {
                 $attachmentIds[] = $meta['service_image'];
             }
         }
 
         // 3. Query một lần duy nhất để lấy URL (guid) của tất cả các ảnh đó
         $images = [];
-        if (!empty($attachmentIds)) {
+        if (! empty($attachmentIds)) {
             $images = WpPost::query()
                 ->whereIn('ID', array_unique($attachmentIds))
                 ->pluck('guid', 'ID') // Trả về dạng mảng: [139 => 'https://...', 140 => '...']
@@ -51,9 +51,9 @@ class ServiceController extends Controller
             // Nếu tìm thấy ID ảnh trong mảng $images thì lấy URL, không thì để rỗng
             $imageUrl = $images[$imageId] ?? '';
 
-            $title = $meta['title_' . $locale] ?? $meta['title_ja'] ?? $item->post_title;
-            $subtitle = $meta['subtitle_' . $locale] ?? $meta['subtitle_ja'] ?? '';
-            $content = $meta['content_' . $locale] ?? $meta['content_ja'] ?? $item->post_content;
+            $title = $meta['title_'.$locale] ?? $meta['title_ja'] ?? $item->post_title;
+            $subtitle = $meta['subtitle_'.$locale] ?? $meta['subtitle_ja'] ?? '';
+            $content = $meta['content_'.$locale] ?? $meta['content_ja'] ?? $item->post_content;
 
             return [
                 'id' => $item->ID,

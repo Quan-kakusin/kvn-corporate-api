@@ -28,7 +28,6 @@ class WpPost extends Model
 
     protected $primaryKey = 'ID';
 
-
     public function meta()
     {
         return $this->hasMany(WpPostMeta::class, 'post_id', 'ID');

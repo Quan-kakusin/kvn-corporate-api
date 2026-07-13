@@ -3,10 +3,10 @@
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\SeoController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\SubscriberController;
 use App\Http\Controllers\Integration\WebhookController;
-use App\Http\Controllers\Api\SeoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/news', [NewsController::class, 'index']);

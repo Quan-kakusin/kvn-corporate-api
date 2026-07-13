@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-
 use App\Mail\SubscriptionSuccess;
 use App\Models\Subscriber;
 use Illuminate\Http\Request;

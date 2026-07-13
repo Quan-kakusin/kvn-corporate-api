@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Wordpress\WpPost;
+use App\Traits\SeoFormatterTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use OpenApi\Attributes as OA;
-use App\Traits\SeoFormatterTrait;
 
 class ProductController extends Controller
 {
@@ -73,7 +73,7 @@ class ProductController extends Controller
     public function show(Request $request, $slug)
     {
         $locale = $request->query('locale', 'ja');
-        if (!in_array($locale, ['ja', 'vi', 'en'])) {
+        if (! in_array($locale, ['ja', 'vi', 'en'])) {
             $locale = 'ja';
         }
 
@@ -98,9 +98,9 @@ class ProductController extends Controller
 
         $term = $post->terms->where('taxonomy', 'product_category')->first() ?? $post->terms->first();
 
-        $title = $meta['title_' . $locale] ?? $meta['title_ja'] ?? $post->post_title;
-        $subtitle = $meta['subtitle_' . $locale] ?? $meta['subtitle_ja'] ?? '';
-        $content = $meta['content_' . $locale] ?? $meta['content_ja'] ?? $post->post_content;
+        $title = $meta['title_'.$locale] ?? $meta['title_ja'] ?? $post->post_title;
+        $subtitle = $meta['subtitle_'.$locale] ?? $meta['subtitle_ja'] ?? '';
+        $content = $meta['content_'.$locale] ?? $meta['content_ja'] ?? $post->post_content;
 
         return response()->json([
             'status' => 'success',
@@ -119,7 +119,7 @@ class ProductController extends Controller
                     'name' => $term->name,
                     'slug' => $term->slug,
                 ] : null,
-                'seo' => $this->buildSeoData($post, $meta, $locale, 'products')
+                'seo' => $this->buildSeoData($post, $meta, $locale, 'products'),
             ],
         ], 200);
     }
@@ -176,8 +176,8 @@ class ProductController extends Controller
 
             $term = $item->terms->where('taxonomy', 'product_category')->first() ?? $item->terms->first();
 
-            $title = $meta['title_' . $locale] ?? $meta['title_ja'] ?? $item->post_title;
-            $subtitle = $meta['subtitle_' . $locale] ?? $meta['subtitle_ja'] ?? '';
+            $title = $meta['title_'.$locale] ?? $meta['title_ja'] ?? $item->post_title;
+            $subtitle = $meta['subtitle_'.$locale] ?? $meta['subtitle_ja'] ?? '';
 
             return [
                 'id' => $item->ID,

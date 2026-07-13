@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Wordpress\WpPost;
+use App\Traits\SeoFormatterTrait;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use OpenApi\Attributes as OA;
-use App\Traits\SeoFormatterTrait;
-use Illuminate\Http\JsonResponse;
 
 class NewsController extends Controller
 {
@@ -84,7 +84,7 @@ class NewsController extends Controller
 
         $post = $this->getBaseNewsQuery()->bySlug($slug)->first();
 
-        if (!$post) {
+        if (! $post) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'News not found',
@@ -96,7 +96,7 @@ class NewsController extends Controller
 
         // Bổ sung các trường chỉ detail mới có
         $meta = $post->meta->pluck('meta_value', 'meta_key');
-        $formatted['content'] = $meta['content_' . $locale] ?? $meta['content_ja'] ?? $post->post_content;
+        $formatted['content'] = $meta['content_'.$locale] ?? $meta['content_ja'] ?? $post->post_content;
         $formatted['seo'] = $this->buildSeoData($post, $meta, $locale, 'news');
 
         return response()->json([
@@ -113,7 +113,7 @@ class NewsController extends Controller
         // Bước 1: Gom tất cả các Image ID dạng số của cả danh sách lại thành một mảng độc nhất
         $imageIds = $newsCollection->map(function ($item) {
             return $item->meta->where('meta_key', 'image')->first()?->meta_value;
-        })->filter(fn($id) => is_numeric($id))->unique()->toArray();
+        })->filter(fn ($id) => is_numeric($id))->unique()->toArray();
 
         // Bước 2: Chỉ chạy DUY NHẤT 1 câu query để lôi hết link ảnh của cả list ra (Eager-like loading)
         $attachments = empty($imageIds) ? collect() : DB::table('wp_posts')
@@ -141,8 +141,8 @@ class NewsController extends Controller
 
         return [
             'id' => $item->ID,
-            'title' => $meta['title_' . $locale] ?? $meta['title_ja'] ?? $item->post_title,
-            'subtitle' => $meta['subtitle_' . $locale] ?? $meta['subtitle_ja'] ?? '',
+            'title' => $meta['title_'.$locale] ?? $meta['title_ja'] ?? $item->post_title,
+            'subtitle' => $meta['subtitle_'.$locale] ?? $meta['subtitle_ja'] ?? '',
             'image' => [
                 'url' => $imageUrl,
             ],
@@ -171,7 +171,7 @@ class NewsController extends Controller
     }
 
     /**
-     * 💡 Tip nâng cao: Đoạn này chạy Join 4 bảng rất nặng. 
+     * 💡 Tip nâng cao: Đoạn này chạy Join 4 bảng rất nặng.
      * Sau này đi làm thực tế khuyên bro nên bỏ vào Cache (ví dụ Cache::remember trong 1 tiếng) để tối ưu tối đa.
      */
     private function getCategoryCounts()

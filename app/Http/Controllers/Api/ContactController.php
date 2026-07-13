@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-
 use App\Mail\ContactSuccessToCustomer;
 use App\Mail\ContactToCompany;
 use App\Models\Contact;
@@ -91,7 +90,7 @@ class ContactController extends Controller
                 'message' => 'Contact information has been successfully submitted.',
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Contact Submission Error: ' . $e->getMessage());
+            \Log::error('Contact Submission Error: '.$e->getMessage());
 
             return response()->json([
                 'status' => 'error',
