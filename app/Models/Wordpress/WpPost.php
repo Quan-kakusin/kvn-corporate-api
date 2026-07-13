@@ -28,10 +28,6 @@ class WpPost extends Model
 
     protected $primaryKey = 'ID';
 
-    public function translations()
-    {
-        return $this->hasMany(WpPostTranslation::class, 'post_id', 'ID');
-    }
 
     public function meta()
     {
